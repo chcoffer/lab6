@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:push": "prisma db push",
+    "db:seed": "node prisma/seed.cjs",
+    "db:setup": "prisma db push && node prisma/seed.cjs"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
