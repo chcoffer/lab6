@@ -12,3 +12,88 @@ model EnvironmentCheck {
   message   String
   createdAt DateTime @default(now())
 }
+
+model User {
+  id          String       @id @default(cuid())
+  name        String
+  email       String       @unique
+  initials    String
+  color       String       @default("#d9e5d1")
+  memberships Membership[]
+  paid        Expense[]    @relation("Payer")
+  submitted   Expense[]    @relation("Submitter")
+  shares      ExpenseShare[]
+  sentPayments Payment[]   @relation("PaymentSender")
+  receivedPayments Payment[] @relation("PaymentRecipient")
+  createdAt   DateTime     @default(now())
+}
+
+model Group {
+  id          String       @id @default(cuid())
+  name        String
+  emoji       String       @default("🏠")
+  color       String       @default("#e8efe4")
+  members     Membership[]
+  expenses    Expense[]
+  payments    Payment[]
+  createdAt   DateTime     @default(now())
+}
+
+model Membership {
+  id      String @id @default(cuid())
+  userId  String
+  groupId String
+  role    String @default("MEMBER")
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+}
+
+model Expense {
+  id          String        @id @default(cuid())
+  groupId     String
+  payerId     String
+  submitterId String
+  description String
+  amountCents Int
+  date        DateTime
+  splitType   String        @default("EQUAL")
+  status      String        @default("APPROVED")
+  note        String?
+  group       Group         @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  payer       User          @relation("Payer", fields: [payerId], references: [id])
+  submitter   User          @relation("Submitter", fields: [submitterId], references: [id])
+  shares      ExpenseShare[]
+  createdAt   DateTime      @default(now())
+
+  @@index([groupId, date])
+}
+
+model ExpenseShare {
+  id          String  @id @default(cuid())
+  expenseId   String
+  userId      String
+  shareCents  Int
+  percent     Float?
+  expense     Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  user        User    @relation(fields: [userId], references: [id])
+
+  @@unique([expenseId, userId])
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  groupId     String
+  senderId    String
+  recipientId String
+  amountCents Int
+  date        DateTime
+  note        String?
+  group       Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  sender      User     @relation("PaymentSender", fields: [senderId], references: [id])
+  recipient   User     @relation("PaymentRecipient", fields: [recipientId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([groupId, date])
+}
